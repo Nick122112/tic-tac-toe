@@ -1,253 +1,142 @@
 "use strict";
-
-const Player = (choice) => {
-  return { choice };
+const Player = function (name, selector, id) {
+  this.name = name;
+  this.selector = selector;
+  this.id = id;
 };
 
-const player1 = Player("X");
-const player2 = Player("O");
+const player1 = new Player("Player 1", "X", 1);
+const player2 = new Player("Player 2", "O", 2);
+let player1Score = 0;
+let player2Score = 0;
 let currentPlayer = player1;
 
-function changeTurn() {
-  if (currentPlayer === player1) {
-    currentPlayer = player2;
-  } else if (currentPlayer === player2) {
-    currentPlayer = player1;
-  }
-}
+const Gameboard = {
+  gameboardArr: ["", "", "", "", "", "", "", "", ""],
+  displayBoard() {
+    for (let i = 0; i < this.gameboardArr.length; i++) {
+      document.querySelector(`.section${i}`).textContent = this.gameboardArr[i];
+      document
+        .querySelector(`.section${i}`)
+        .setAttribute("style", "font-size: 6.4rem; text-align: center;");
+    }
+  },
+  makeClickable() {
+    for (let i = 0; i < this.gameboardArr.length; i++) {
+      document
+        .querySelector(`.section${i}`)
+        .addEventListener("click", function () {
+          if (Gameboard.gameboardArr[i] !== "" || Game.stillPlaying === false) {
+            return;
+          }
+          Gameboard.gameboardArr[i] = currentPlayer.selector;
+          Gameboard.displayBoard();
+          Game.checkWin();
+          Game.checkTie();
+        });
+    }
+  },
+};
 
-let gameboard = [
-  ["", "", ""],
-  ["", "", ""],
-  ["", "", ""],
-];
+const Game = {
+  winMessage: `${currentPlayer.name} wins!`,
+  isWinner: false,
+  stillPlaying: true,
+  changeCurrentPlayer() {
+    currentPlayer === player1
+      ? (currentPlayer = player2)
+      : (currentPlayer = player1);
+  },
+  displayResult(message) {
+    const result = document.createElement("p");
+    result.textContent = message;
+    result.setAttribute(
+      "style",
+      "font-size: 2.4rem; text-align: center; margin-bottom: 2rem;"
+    );
+    const contentContainer = document.querySelector(".content-container");
+    document.body.insertBefore(result, contentContainer);
+  },
+  declareWinner() {
+    currentPlayer === player1 ? (player1Score += 1) : (player2Score += 1);
+    document.querySelector(".player-1-score").textContent = player1Score;
+    document.querySelector(".player-2-score").textContent = player2Score;
+    this.displayResult(this.winMessage);
+    this.isWinner = true;
+    this.stillPlaying = false;
+  },
+  checkWin() {
+    let gameboardArr = Gameboard.gameboardArr;
+    // Horizontal Wins
+    if (
+      gameboardArr[0] === currentPlayer.selector &&
+      gameboardArr[1] === currentPlayer.selector &&
+      gameboardArr[2] === currentPlayer.selector
+    ) {
+      this.declareWinner();
+    }
+    if (
+      gameboardArr[3] === currentPlayer.selector &&
+      gameboardArr[4] === currentPlayer.selector &&
+      gameboardArr[5] === currentPlayer.selector
+    ) {
+      this.declareWinner();
+    }
+    if (
+      gameboardArr[6] === currentPlayer.selector &&
+      gameboardArr[7] === currentPlayer.selector &&
+      gameboardArr[8] === currentPlayer.selector
+    ) {
+      this.declareWinner();
+    }
+    // Vertical Wins
+    if (
+      gameboardArr[0] === currentPlayer.selector &&
+      gameboardArr[3] === currentPlayer.selector &&
+      gameboardArr[6] === currentPlayer.selector
+    ) {
+      this.declareWinner();
+    }
+    if (
+      gameboardArr[1] === currentPlayer.selector &&
+      gameboardArr[4] === currentPlayer.selector &&
+      gameboardArr[7] === currentPlayer.selector
+    ) {
+      this.declareWinner();
+    }
+    if (
+      gameboardArr[2] === currentPlayer.selector &&
+      gameboardArr[5] === currentPlayer.selector &&
+      gameboardArr[8] === currentPlayer.selector
+    ) {
+      this.declareWinner();
+    }
+    // Diagonal Wins
+    if (
+      gameboardArr[0] === currentPlayer.selector &&
+      gameboardArr[4] === currentPlayer.selector &&
+      gameboardArr[8] === currentPlayer.selector
+    ) {
+      this.declareWinner();
+    }
+    if (
+      gameboardArr[2] === currentPlayer.selector &&
+      gameboardArr[4] === currentPlayer.selector &&
+      gameboardArr[6] === currentPlayer.selector
+    ) {
+      this.declareWinner();
+    } else {
+      this.changeCurrentPlayer();
+    }
+  },
+  checkTie() {
+    let gameboardArr = Gameboard.gameboardArr;
+    if (gameboardArr.includes("") === false && this.isWinner === false) {
+      this.displayResult(`That's a tie!`);
+      this.stillPlaying = false;
+    }
+  },
+};
 
-const section1 = document.getElementById("section1");
-const section2 = document.getElementById("section2");
-const section3 = document.getElementById("section3");
-const section4 = document.getElementById("section4");
-const section5 = document.getElementById("section5");
-const section6 = document.getElementById("section6");
-const section7 = document.getElementById("section7");
-const section8 = document.getElementById("section8");
-const section9 = document.getElementById("section9");
-
-function displayBoard() {
-  section1.textContent = gameboard[0][0];
-  section2.textContent = gameboard[0][1];
-  section3.textContent = gameboard[0][2];
-  section4.textContent = gameboard[1][0];
-  section5.textContent = gameboard[1][1];
-  section6.textContent = gameboard[1][2];
-  section7.textContent = gameboard[2][0];
-  section8.textContent = gameboard[2][1];
-  section9.textContent = gameboard[2][2];
-}
-
-function sectionChoice(outerIndex, innerIndex) {
-  if (
-    gameboard[outerIndex][innerIndex] === "X" ||
-    gameboard[outerIndex][innerIndex] === "O"
-  ) {
-    alert(`That spot is already taken!`);
-    return;
-  }
-  gameboard[outerIndex].splice(innerIndex, 1, currentPlayer.choice);
-  console.log(gameboard[0][0]);
-  console.log(gameboard[0][1]);
-  console.log(gameboard[0][2]);
-  displayBoard();
-  checkWin();
-  checkTie();
-  changeTurn();
-}
-
-section1.addEventListener("click", function () {
-  sectionChoice(0, 0);
-});
-
-section2.addEventListener("click", function () {
-  sectionChoice(0, 1);
-});
-
-section3.addEventListener("click", function () {
-  sectionChoice(0, 2);
-});
-
-section4.addEventListener("click", function () {
-  sectionChoice(1, 0);
-});
-
-section5.addEventListener("click", function () {
-  sectionChoice(1, 1);
-});
-section6.addEventListener("click", function () {
-  sectionChoice(1, 2);
-});
-
-section7.addEventListener("click", function () {
-  sectionChoice(2, 0);
-});
-
-section8.addEventListener("click", function () {
-  sectionChoice(2, 1);
-});
-
-section9.addEventListener("click", function () {
-  sectionChoice(2, 2);
-});
-
-function checkWin() {
-  if (
-    gameboard[0][0] === "X" &&
-    gameboard[0][1] === "X" &&
-    gameboard[0][2] === "X"
-  ) {
-    alert(`Player 1 wins!`);
-    endGame();
-  } else if (
-    gameboard[0][0] === "O" &&
-    gameboard[0][1] === "O" &&
-    gameboard[0][2] === "O"
-  ) {
-    alert(`Player 2 wins!`);
-    endGame();
-  } else if (
-    gameboard[1][0] === "X" &&
-    gameboard[1][1] === "X" &&
-    gameboard[1][2] === "X"
-  ) {
-    alert(`Player 1 wins!`);
-    endGame();
-  } else if (
-    gameboard[1][0] === "O" &&
-    gameboard[1][1] === "O" &&
-    gameboard[1][2] === "O"
-  ) {
-    alert(`Player 2 wins!`);
-    endGame();
-  } else if (
-    gameboard[2][0] === "X" &&
-    gameboard[2][1] === "X" &&
-    gameboard[2][2] === "X"
-  ) {
-    alert(`Player 1 wins!`);
-    endGame();
-  } else if (
-    gameboard[2][0] === "O" &&
-    gameboard[2][1] === "O" &&
-    gameboard[2][2] === "O"
-  ) {
-    alert(`Player 2 wins!`);
-    endGame();
-  }
-  if (
-    gameboard[0][0] === "X" &&
-    gameboard[1][0] === "X" &&
-    gameboard[2][0] === "X"
-  ) {
-    alert(`Player 1 wins!`);
-    endGame();
-  } else if (
-    gameboard[0][0] === "O" &&
-    gameboard[1][0] === "O" &&
-    gameboard[2][0] === "O"
-  ) {
-    alert(`Player 2 wins!`);
-    endGame();
-  } else if (
-    gameboard[0][1] === "X" &&
-    gameboard[1][1] === "X" &&
-    gameboard[2][1] === "X"
-  ) {
-    alert(`Player 1 wins!`);
-    endGame();
-  } else if (
-    gameboard[0][1] === "O" &&
-    gameboard[1][1] === "O" &&
-    gameboard[2][1] === "O"
-  ) {
-    alert(`Player 2 wins!`);
-    endGame();
-  } else if (
-    gameboard[0][2] === "X" &&
-    gameboard[1][2] === "X" &&
-    gameboard[2][2] === "X"
-  ) {
-    alert(`Player 1 wins!`);
-    endGame();
-  } else if (
-    gameboard[0][2] === "O" &&
-    gameboard[1][2] === "O" &&
-    gameboard[2][2] === "O"
-  ) {
-    alert(`Player 2 wins!`);
-    endGame();
-  }
-  if (
-    gameboard[0][0] === "X" &&
-    gameboard[1][1] === "X" &&
-    gameboard[2][2] === "X"
-  ) {
-    alert(`Player 1 wins!`);
-    endGame();
-  } else if (
-    gameboard[0][0] === "O" &&
-    gameboard[1][1] === "O" &&
-    gameboard[2][2] === "O"
-  ) {
-    alert(`Player 2 wins!`);
-    endGame();
-  } else if (
-    gameboard[2][0] === "X" &&
-    gameboard[1][1] === "X" &&
-    gameboard[0][2] === "X"
-  ) {
-    alert(`Player 1 wins!`);
-    endGame();
-  } else if (
-    gameboard[2][0] === "O" &&
-    gameboard[1][1] === "O" &&
-    gameboard[0][2] === "O"
-  ) {
-    alert(`Player 2 wins!`);
-    endGame();
-  } else {
-    return false;
-  }
-}
-
-function checkTie() {
-  if (
-    gameboard[0].includes("") === false &&
-    gameboard[1].includes("") === false &&
-    gameboard[2].includes("") === false &&
-    checkWin() === false
-  ) {
-    alert(`That's a tie!`);
-  }
-}
-
-// restart button
-const restartBtn = document.createElement("button");
-restartBtn.setAttribute(
-  "style",
-  "width: 5rem; height: 3rem; margin-top: 1rem;"
-);
-restartBtn.textContent = "Restart";
-const contentContainer = document.querySelector(".content-container");
-
-// end game function
-function endGame() {
-  contentContainer.appendChild(restartBtn);
-}
-
-restartBtn.addEventListener("click", () => {
-  gameboard = [
-    ["", "", ""],
-    ["", "", ""],
-    ["", "", ""],
-  ];
-  displayBoard();
-  contentContainer.removeChild(restartBtn);
-});
+Gameboard.displayBoard();
+Gameboard.makeClickable();
